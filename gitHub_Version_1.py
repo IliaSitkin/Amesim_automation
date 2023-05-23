@@ -783,8 +783,6 @@ standart_chart_Y_list.clear()
 sheet_Linest = workbook.worksheets[3]  # Делаем активным для записи второй лист
 
 last_row = sheet_Linest.max_row
-slope_list = list()
-intercept_list = list()
 variable_name_Y_Linest_list = list()
 polynom_list = list()
 orig_mass_flow_list = list()
@@ -841,32 +839,28 @@ for i, (key, values) in enumerate(dictionary.items()):
 
 
     sheet_Linest.cell(row=last_row+1, column=1).value = 'CHOKE'
-    sheet_Linest.cell(row=last_row+number_of_points +
-                      1, column=1).value = 'SURGE'
+    sheet_Linest.cell(row=last_row+number_of_points + 1, column=1).value = 'SURGE'
     sheet_Linest.cell(row=last_row, column=2).value = 'RPM'
     sheet_Linest.cell(row=last_row, column=3).value = 'Mass_flow [kg/s]'
-    sheet_Linest.cell(row=last_row, column=4).value = f'{variable_name_Y}'
-    sheet_Linest.cell(row=last_row, column=5).value = 'Mass_flow [kg/s], SURGE'
-    sheet_Linest.cell(row=last_row, column=6).value = 'Interval'
-    sheet_Linest.cell(row=last_row, column=7).value = 'Number of Points'
-    sheet_Linest.cell(row=last_row, column=8).value = 'Mass_flow [kg/s]'
-    sheet_Linest.cell(row=last_row, column=9).value = f'{variable_name_Y}'
-    sheet_Linest.cell(row=last_row, column=10).value = 'SLOPE'
-    sheet_Linest.cell(row=last_row, column=11).value = 'Intercept'
-    sheet_Linest.cell(row=last_row, column=12).value = 'Error_Polynom'
-    sheet_Linest.cell(row=last_row, column=13).value = 'X min'
-    sheet_Linest.cell(row=last_row, column=14).value = 'X max'
-    sheet_Linest.cell(row=last_row, column=15).value = 'Y min'
-    sheet_Linest.cell(row=last_row, column=16).value = 'Y max'
-    sheet_Linest.cell(row=last_row, column=17).value = 'Y function'
-    sheet_Linest.cell(row=last_row, column=18).value = 'Test_Polynom'
+    sheet_Linest.cell(row=last_row, column=4).value = 'Mass_flow [kg/s], SURGE'
+    sheet_Linest.cell(row=last_row, column=5).value = 'Interval'
+    sheet_Linest.cell(row=last_row, column=6).value = 'Number of Points'
+    sheet_Linest.cell(row=last_row, column=7).value = 'Mass_flow [kg/s]'
+    sheet_Linest.cell(row=last_row, column=8).value = f'{variable_name_Y}'
+
+    sheet_Linest.cell(row=last_row, column=10).value = 'X min'
+    sheet_Linest.cell(row=last_row, column=11).value = 'X max'
+    sheet_Linest.cell(row=last_row, column=12).value = 'Y min'
+    sheet_Linest.cell(row=last_row, column=13).value = 'Y max'
+    sheet_Linest.cell(row=last_row, column=14).value = 'Y function'
+    sheet_Linest.cell(row=last_row, column=18).value = 'PI_result'
 
 # Запролняем исзодные данные Mass_flow и variable_name_Y#################################
     for j in range(len(values) - 1, -1, -1):
         sheet_Linest.cell(row=last_row + len(values) - j,
-                          column=8).value = values[j][0]  # Mass_flow
+                          column=7).value = values[j][0]  # Mass_flow
         sheet_Linest.cell(row=last_row + len(values) - j,
-                          column=9).value = values[j][1]  # variable_name_Y
+                          column=8).value = values[j][1]  # variable_name_Y
         revers_orig_mass_flow_list.append(values[j][0])
         revers_orig_variable_name_list.append(values[j][1])
 # Mass_flow и variable_name_Y  от меньшего к большему
@@ -874,16 +868,6 @@ for i, (key, values) in enumerate(dictionary.items()):
         orig_mass_flow_list.append(x)
         orig_variable_name_list.append(y)
 
-# Рассчет значения SLOPE и Intercept################################################
-    for k in range(1, len(values)):
-        slope_list.insert(
-            0, (values[k-1][1]-values[k][1])/(values[k-1][0]-values[k][0]))
-        intercept_list.insert(
-            0, (values[k-1][1]-((values[k-1][1]-values[k][1])/(values[k-1][0]-values[k][0]))*(values[k-1][0])))
-        sheet_Linest.cell(row=last_row+k, column=10).value = (
-            values[k-1][1]-values[k][1])/(values[k-1][0]-values[k][0])  # slope
-        sheet_Linest.cell(row=last_row+k, column=11).value = values[k-1][1]-(
-            (values[k-1][1]-values[k][1])/(values[k-1][0]-values[k][0]))*(values[k-1][0])  # Intercept
 
 # РАССЧЕТЫ ########################################################################
     interval = (y_FUNCTION_list[i] - serge_mass_flow[i])/number_of_points
@@ -894,86 +878,20 @@ for i, (key, values) in enumerate(dictionary.items()):
 
     # 'Mass_flow [kg/s], SURGE'
     sheet_Linest.cell(
-        row=last_row+1, column=5).value = serge_mass_flow[i]
-    sheet_Linest.cell(row=last_row+1, column=6).value = interval  # Interval
-    sheet_Linest.cell(row=last_row+1, column=7).value = number_of_points
+        row=last_row+1, column=4).value = serge_mass_flow[i]
+    sheet_Linest.cell(row=last_row+1, column=5).value = interval  # Interval
+    sheet_Linest.cell(row=last_row+1, column=6).value = number_of_points
 # Цикл заполняющий таблицу значениями цифр
 
     for j in range(1, number_of_points+2):
-        sheet_Linest.cell(row=last_row+j, column=2).value = key
-        sheet_Linest.cell(row=last_row+j, column=3).value = min_value_mass_flow
+        sheet_Linest.cell(row=last_row+j, column=2).value = key #   RPM
+        sheet_Linest.cell(row=last_row+j, column=3).value = min_value_mass_flow #   Mass flow с шагом
         min_value_mass_flow_list.append(min_value_mass_flow)
 
         min_value_mass_flow -= interval
 
-    for_final_polynom_mass_list.append(min_value_mass_flow_list.copy())
-# РАССЧЕТЫ variable_name_Y########################################################################
-    # количество элементов в первом списке
-    n = len(slope_list)
-    # количество элементов в каждой части второго списка
-    m = len(min_value_mass_flow_list) // n
-    # цикл для перебора элементов первого списка в обратном порядке
-    remainder = len(min_value_mass_flow_list) % n
-    shift = 0
-
-    for k in range(n):
-        # количество элементов в текущей части
-        current_m = m + (1 if k < remainder else 0)
-    # цикл для перебора элементов соответствующей части второго списка
-        for j in range(shift, shift+current_m):
-            # умножение элементов соответствующих списков
-            result = slope_list[k] * \
-                min_value_mass_flow_list[j] + intercept_list[k]
-            variable_name_Y_Linest_list.append(result)
-    # обновление индекса для следующей части
-        shift += current_m
-
-# Считаем полином 3 степени ##########################################################
-    x_massflow_3 = []
-    y_PI_3 = []
-
-    for m in range(len(min_value_mass_flow_list)//10, len(min_value_mass_flow_list)):
-        x_massflow_3.append(min_value_mass_flow_list[m])
-        y_PI_3.append(variable_name_Y_Linest_list[m])
-
-    x_massflow_3 = np.array(x_massflow_3)
-    y_PI_3 = np.array(y_PI_3)
-
-    # Вычисление коэффициентов регрессии с помощью метода наименьших квадратов
-    z_poly_3 = np.polyfit(x_massflow_3, y_PI_3, 3)
-
-
-# Считаем полином 4 степени ##########################################################
-
-    x_massflow_4 = []
-    y_PI_4 = []
-
-    for m in range(len(min_value_mass_flow_list)//10):
-        x_massflow_4.append(min_value_mass_flow_list[m])
-        y_PI_4.append(variable_name_Y_Linest_list[m])
-
-    x_massflow_4 = np.array(x_massflow_4)
-    y_PI_4 = np.array(y_PI_4)
-
-    # Вычисление коэффициентов регрессии с помощью метода наименьших квадратов
-    z_poly_4 = np.polyfit(x_massflow_4, y_PI_4, 4)
-
 ###############################################################################################
-
-    for j in range(len(min_value_mass_flow_list)//10):
-        poly = z_poly_4[0]*min_value_mass_flow_list[j]**4+z_poly_4[1]*min_value_mass_flow_list[j]**3 + \
-            z_poly_4[2]*min_value_mass_flow_list[j]**2 + \
-            z_poly_4[3]*min_value_mass_flow_list[j]+z_poly_4[4]
-        polynom_list.append(poly)
-
-    for j in range(len(min_value_mass_flow_list)//10, len(min_value_mass_flow_list)):
-        poly = z_poly_3[0]*min_value_mass_flow_list[j]**3+z_poly_3[1] * \
-            min_value_mass_flow_list[j]**2+z_poly_3[2] * \
-            min_value_mass_flow_list[j]+z_poly_3[3]
-        polynom_list.append(poly)
-
-###############################################################################################
-########## Tестовый выриант исполнения #########################################################
+########## Данные для Xmin max Y min max #########################################################
 
     cropped_data_mass = list()
 
@@ -1004,62 +922,16 @@ for i, (key, values) in enumerate(dictionary.items()):
         y_max_list.append(y_max)
         y_function_list_4.append(y_FUNCTION)
 
-    # Полином для первых трех изначальныз значения Mass_Flow
-    x_first_free = []
-    y_first_free = []
-
-    for m in range(3):
-        x_first_free.append(revers_orig_mass_flow_list[m])
-        y_first_free.append(revers_orig_variable_name_list[m])
-
-    x_first_free = np.array(x_first_free)
-    y_first_free = np.array(y_first_free)
-
-    # Вычисление коэффициентов регрессии с помощью метода наименьших квадратов
-    z_first_free = np.polyfit(x_first_free, y_first_free, 3)
-#############################################################################################
-    # Полином для значений variable_name_Y которые мы строили по отфильтрованнным значениям
-    x_sec_free = []
-    y_sec_free = []
-
-    for m in range(len(cropped_data_mass)):
-        y_sec_free.append(y_function_list_4[m])
-        x_sec_free.append(cropped_data_mass[m])
-
-    x_sec_free = np.array(x_sec_free)
-    y_sec_free = np.array(y_sec_free)
-
-    # Вычисление коэффициентов регрессии с помощью метода наименьших квадратов
-    z_sec_free = np.polyfit(x_sec_free, y_sec_free, 3)
-
-    for j in range(3):
-        polynom_list_test.append(z_first_free[0]*min_value_mass_flow_list[j]**3+z_first_free[1] *
-                                 min_value_mass_flow_list[j]**2+z_first_free[2]*min_value_mass_flow_list[j]+z_first_free[3])
-    for j in range(3, len(min_value_mass_flow_list)):
-        polynom_list_test.append(z_sec_free[0]*min_value_mass_flow_list[j]**3+z_sec_free[1] *
-                                 min_value_mass_flow_list[j]**2+z_sec_free[2]*min_value_mass_flow_list[j]+z_sec_free[3])
-
-    for_final_polynom_variable_name_list.append(polynom_list_test.copy())
-################################
-
     for j, value in enumerate(x_min_list):
-        sheet_Linest.cell(row=last_row+j+1, column=13).value = x_min_list[j]
-        sheet_Linest.cell(row=last_row+j+1, column=14).value = x_max_list[j]
-        sheet_Linest.cell(row=last_row+j+1, column=15).value = y_min_list[j]
-        sheet_Linest.cell(row=last_row+j+1, column=16).value = y_max_list[j]
-        sheet_Linest.cell(row=last_row+j+1,
-                          column=17).value = y_function_list_4[j]
+        sheet_Linest.cell(row=last_row+j+1, column=10).value = x_min_list[j]
+        sheet_Linest.cell(row=last_row+j+1, column=11).value = x_max_list[j]
+        sheet_Linest.cell(row=last_row+j+1, column=12).value = y_min_list[j]
+        sheet_Linest.cell(row=last_row+j+1, column=13).value = y_max_list[j]
+        sheet_Linest.cell(row=last_row+j+1,column=14).value = y_function_list_4[j]
 
 ##############################################################################################
 ##############################################################################################
 
-    for j in range(len(variable_name_Y_Linest_list)):
-        sheet_Linest.cell(row=last_row+j+1,
-                          column=4).value = variable_name_Y_Linest_list[j]
-        sheet_Linest.cell(row=last_row+j+1,
-                          column=12).value = polynom_list[j]
-        sheet_Linest.cell(row=last_row+j+1,
-                          column=18).value = polynom_list_test[j]
 
     # создание графиков для PI
     # Создание объекта LineChart и добавление его на лист
@@ -1071,38 +943,24 @@ for i, (key, values) in enumerate(dictionary.items()):
     # Определение области значений для оси X и оси Y
     x_data1 = Reference(sheet_Linest, min_col=3,
                         min_row=last_row+1, max_row=last_row+number_of_points+1)
-    y_data1 = Reference(sheet_Linest, min_col=4,
-                        min_row=last_row+1, max_row=last_row+number_of_points+1)
-    x_data2 = Reference(sheet_Linest, min_col=3,
-                        min_row=last_row+1, max_row=last_row+number_of_points+1)
-    y_data2 = Reference(sheet_Linest, min_col=12,
-                        min_row=last_row+1, max_row=last_row+number_of_points+1)
-    x_data3 = Reference(sheet_Linest, min_col=3,
-                        min_row=last_row+1, max_row=last_row+number_of_points+1)
-    y_data3 = Reference(sheet_Linest, min_col=18,
+    y_data1 = Reference(sheet_Linest, min_col=18,
                         min_row=last_row+1, max_row=last_row+number_of_points+1)
 
     # Добавление данных на график
-    series1 = Series(y_data1, x_data1, title=f'{variable_name_Y}')
-    series2 = Series(y_data2, x_data2, title='Error_Polynom')
-    series3 = Series(y_data3, x_data3, title='Test_Polynom')
+    series1 = Series(y_data1, x_data1, title=f'{variable_name_Y} result')
     chart3.append(series1)
-    chart3.append(series2)
-    chart3.append(series3)
 
     # Добавление графика на лист
-    sheet_Linest.add_chart(chart3, f"T{last_row}")
+    sheet_Linest.add_chart(chart3, f"Q{last_row}")
 
     # задаем диапазон оси X и Y
-    chart3.x_axis.scaling.min = round(min(min_value_mass_flow_list)-0.1, 1)
-    chart3.x_axis.scaling.max = round(max(min_value_mass_flow_list)+0.1, 1)
-    chart3.y_axis.scaling.min = round(min(polynom_list_test)-0.1, 1)
-    chart3.y_axis.scaling.max = round(max(polynom_list_test)+0.2, 1)
+    # chart3.x_axis.scaling.min = round(min(min_value_mass_flow_list)-0.1, 1)
+    # chart3.x_axis.scaling.max = round(max(min_value_mass_flow_list)+0.1, 1)
+    # chart3.y_axis.scaling.min = round(min(polynom_list_test)-0.1, 1)
+    # chart3.y_axis.scaling.max = round(max(polynom_list_test)+0.2, 1)
 
     last_row = sheet_Linest.max_row + 4
 
-    slope_list.clear()
-    intercept_list.clear()
     min_value_mass_flow_list.clear()
     variable_name_Y_Linest_list.clear()
     polynom_list.clear()
