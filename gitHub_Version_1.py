@@ -842,7 +842,7 @@ for i, (key, values) in enumerate(dictionary.items()):
     sheet_Linest.cell(row=last_row+number_of_points + 1, column=1).value = 'SURGE'
     sheet_Linest.cell(row=last_row, column=2).value = 'RPM'
     sheet_Linest.cell(row=last_row, column=3).value = 'Mass_flow [kg/s]'
-    sheet_Linest.cell(row=last_row, column=4).value = 'Mass_flow [kg/s], SURGE'
+    sheet_Linest.cell(row=last_row, column=4).value = 'SURGE, Mass_flow [kg/s]'
     sheet_Linest.cell(row=last_row, column=5).value = 'Interval'
     sheet_Linest.cell(row=last_row, column=6).value = 'Number of Points'
     sheet_Linest.cell(row=last_row, column=7).value = 'Mass_flow [kg/s]'
@@ -853,7 +853,7 @@ for i, (key, values) in enumerate(dictionary.items()):
     sheet_Linest.cell(row=last_row, column=12).value = 'Y min'
     sheet_Linest.cell(row=last_row, column=13).value = 'Y max'
     sheet_Linest.cell(row=last_row, column=14).value = 'Y function'
-    sheet_Linest.cell(row=last_row, column=18).value = 'PI_result'
+    sheet_Linest.cell(row=last_row, column=15).value = 'PI_result'
 
 # Запролняем исзодные данные Mass_flow и variable_name_Y#################################
     for j in range(len(values) - 1, -1, -1):
@@ -895,16 +895,25 @@ for i, (key, values) in enumerate(dictionary.items()):
 
     cropped_data_mass = list()
 
-    # Нахлждение рабочик точек по Mass Flow
+    # Нахождение рабочих точек по Mass Flow
     for j, valu in enumerate(min_value_mass_flow_list):
         if max(orig_mass_flow_list) >= valu and min(orig_mass_flow_list) <= valu:
             cropped_data_mass.append(valu)
         else:
-            continue
+            cropped_data_mass.append(None)
+
 
 ################################
 
     for j, valu in enumerate(cropped_data_mass):
+        if valu is None:
+            x_min_list.append(None)
+            x_max_list.append(None)
+            y_min_list.append(None)
+            y_max_list.append(None)
+            y_function_list_4.append(None)
+            continue
+
         lst = orig_mass_flow_list
         x = valu
         left, right = find_nearest_points(lst, x)
@@ -915,7 +924,7 @@ for i, (key, values) in enumerate(dictionary.items()):
         y_min = orig_variable_name_list[left_index]
         y_max = orig_variable_name_list[right_index]
 
-        y_FUNCTION = y_min+(y_max-y_min)/(x_max-x_min)*(x - x_min)
+        y_FUNCTION = y_min + (y_max - y_min) / (x_max - x_min) * (x - x_min)
         x_min_list.append(x_min)
         x_max_list.append(x_max)
         y_min_list.append(y_min)
@@ -923,11 +932,20 @@ for i, (key, values) in enumerate(dictionary.items()):
         y_function_list_4.append(y_FUNCTION)
 
     for j, value in enumerate(x_min_list):
-        sheet_Linest.cell(row=last_row+j+1, column=10).value = x_min_list[j]
-        sheet_Linest.cell(row=last_row+j+1, column=11).value = x_max_list[j]
-        sheet_Linest.cell(row=last_row+j+1, column=12).value = y_min_list[j]
-        sheet_Linest.cell(row=last_row+j+1, column=13).value = y_max_list[j]
-        sheet_Linest.cell(row=last_row+j+1,column=14).value = y_function_list_4[j]
+        if x_min_list[j] == None:
+            sheet_Linest.cell(row=last_row+j+1, column=10).value = 'None'
+            sheet_Linest.cell(row=last_row+j+1, column=11).value = 'None'
+            sheet_Linest.cell(row=last_row+j+1, column=12).value = 'None'
+            sheet_Linest.cell(row=last_row+j+1, column=13).value = 'None'
+            sheet_Linest.cell(row=last_row+j+1, column=14).value = 'None'
+        else:
+            sheet_Linest.cell(row=last_row+j+1, column=10).value = x_min_list[j]
+            sheet_Linest.cell(row=last_row+j+1, column=11).value = x_max_list[j]
+            sheet_Linest.cell(row=last_row+j+1, column=12).value = y_min_list[j]
+            sheet_Linest.cell(row=last_row+j+1, column=13).value = y_max_list[j]
+            sheet_Linest.cell(row=last_row+j+1, column=14).value = y_function_list_4[j]
+
+    
 
 ##############################################################################################
 ##############################################################################################
@@ -977,225 +995,225 @@ for i, (key, values) in enumerate(dictionary.items()):
 
 workbook.save(output_file)
 
-#######################################################################################################
-# Работа с 5 листом 'FINAL_graph' нахождение минимума
+# #######################################################################################################
+# # Работа с 5 листом 'FINAL_graph' нахождение минимума
 
-sheet_FINAL = workbook.worksheets[4]  # Делаем активным для записи пятый лист
+# sheet_FINAL = workbook.worksheets[4]  # Делаем активным для записи пятый лист
 
-#Цикл чтобы построить первую лоиентировочную таблицу данных
-sheet_FINAL.cell(row=1, column=1).value = 'RPM'
+# #Цикл чтобы построить первую лоиентировочную таблицу данных
+# sheet_FINAL.cell(row=1, column=1).value = 'RPM'
 
-last_row = sheet_FINAL.max_row
-last_col = sheet_FINAL.max_column
+# last_row = sheet_FINAL.max_row
+# last_col = sheet_FINAL.max_column
 
-keys = list(dictionary.keys())
-key_interval_list =list()
-x_min_SEC_list=list()
-x_max_SEC_list=list()
-y_min_SEC_list=list()
-y_max_SEC_list=list()
-y_function_SEC_list=list()
-pol_for_end=list()
-mass_for_end=list()
-y_function_list=list()
+# keys = list(dictionary.keys())
+# key_interval_list =list()
+# x_min_SEC_list=list()
+# x_max_SEC_list=list()
+# y_min_SEC_list=list()
+# y_max_SEC_list=list()
+# y_function_SEC_list=list()
+# pol_for_end=list()
+# mass_for_end=list()
+# y_function_list=list()
 
-# создание графиков для PI
-# Создание объекта LineChart и добавление его на лист
-chart4 = chart.ScatterChart()
+# # создание графиков для PI
+# # Создание объекта LineChart и добавление его на лист
+# chart4 = chart.ScatterChart()
 
-for i, row in enumerate(for_final_polynom_mass_list):
-    sheet_FINAL.cell(row=1, column=last_col+1).value = keys[i]
-    for j, val in enumerate(row):
-        sheet_FINAL.cell(row=j+2, column=1).value = j+1
-        sheet_FINAL.cell(row=j+2, column=last_col+1).value = val
-        sheet_FINAL.cell(row=j+2, column=last_col+2).value = for_final_polynom_variable_name_list[i][j]
-    last_col = sheet_FINAL.max_column + 1
+# for i, row in enumerate(for_final_polynom_mass_list):
+#     sheet_FINAL.cell(row=1, column=last_col+1).value = keys[i]
+#     for j, val in enumerate(row):
+#         sheet_FINAL.cell(row=j+2, column=1).value = j+1
+#         sheet_FINAL.cell(row=j+2, column=last_col+1).value = val
+#         sheet_FINAL.cell(row=j+2, column=last_col+2).value = for_final_polynom_variable_name_list[i][j]
+#     last_col = sheet_FINAL.max_column + 1
 
-last_row = sheet_FINAL.max_row +3
+# last_row = sheet_FINAL.max_row +3
 
-for i in range(len(for_final_polynom_mass_list[0])):
-    sheet_FINAL.cell(row=last_row, column=1).value = '№' #Y
-    sheet_FINAL.cell(row=last_row, column=2).value = 'RPM ALL'#Y
-    sheet_FINAL.cell(row=last_row, column=3).value = 'Mass_flow [kg/s]'#Y
-    sheet_FINAL.cell(row=last_row, column=4).value = 'NUMBER OF POINTS'#Y
-    sheet_FINAL.cell(row=last_row, column=5).value = 'INTERVAL ALL'#Y
-    sheet_FINAL.cell(row=last_row, column=6).value = 'RPM+INTERVAL'
-    sheet_FINAL.cell(row=last_row, column=7).value = 'X MIN'
-    sheet_FINAL.cell(row=last_row, column=8).value = 'X MAX'
-    sheet_FINAL.cell(row=last_row, column=9).value = 'Y MIN'
-    sheet_FINAL.cell(row=last_row, column=10).value = 'Y MAX'
-    sheet_FINAL.cell(row=last_row, column=11).value = 'Y FUNCTION'
+# for i in range(len(for_final_polynom_mass_list[0])):
+#     sheet_FINAL.cell(row=last_row, column=1).value = '№' #Y
+#     sheet_FINAL.cell(row=last_row, column=2).value = 'RPM ALL'#Y
+#     sheet_FINAL.cell(row=last_row, column=3).value = 'Mass_flow [kg/s]'#Y
+#     sheet_FINAL.cell(row=last_row, column=4).value = 'NUMBER OF POINTS'#Y
+#     sheet_FINAL.cell(row=last_row, column=5).value = 'INTERVAL ALL'#Y
+#     sheet_FINAL.cell(row=last_row, column=6).value = 'RPM+INTERVAL'
+#     sheet_FINAL.cell(row=last_row, column=7).value = 'X MIN'
+#     sheet_FINAL.cell(row=last_row, column=8).value = 'X MAX'
+#     sheet_FINAL.cell(row=last_row, column=9).value = 'Y MIN'
+#     sheet_FINAL.cell(row=last_row, column=10).value = 'Y MAX'
+#     sheet_FINAL.cell(row=last_row, column=11).value = 'Y FUNCTION'
 
-    sheet_FINAL.cell(row=last_row, column=14).value = 'Mass_flow [kg/s]'#Y
-    sheet_FINAL.cell(row=last_row, column=15).value = f'Polynom {variable_name_Y}'#Y
-    sheet_FINAL.cell(row=last_row, column=16).value = 'X min'
-    sheet_FINAL.cell(row=last_row, column=17).value = 'X max'
-    sheet_FINAL.cell(row=last_row, column=18).value = 'Y min'
-    sheet_FINAL.cell(row=last_row, column=19).value = 'Y max'
-    sheet_FINAL.cell(row=last_row, column=20).value = 'Y function'
+#     sheet_FINAL.cell(row=last_row, column=14).value = 'Mass_flow [kg/s]'#Y
+#     sheet_FINAL.cell(row=last_row, column=15).value = f'Polynom {variable_name_Y}'#Y
+#     sheet_FINAL.cell(row=last_row, column=16).value = 'X min'
+#     sheet_FINAL.cell(row=last_row, column=17).value = 'X max'
+#     sheet_FINAL.cell(row=last_row, column=18).value = 'Y min'
+#     sheet_FINAL.cell(row=last_row, column=19).value = 'Y max'
+#     sheet_FINAL.cell(row=last_row, column=20).value = 'Y function'
 
-    sheet_FINAL.cell(row=last_row, column=23).value = 'X RESULT'
-    sheet_FINAL.cell(row=last_row, column=24).value = 'Y RESULT'
+#     sheet_FINAL.cell(row=last_row, column=23).value = 'X RESULT'
+#     sheet_FINAL.cell(row=last_row, column=24).value = 'Y RESULT'
 
-#Запись данных в таблицу
-    sheet_FINAL.cell(row=last_row+1, column=1).value = i+1 #'№'
-    sheet_FINAL.cell(row=last_row+1, column=4).value = number_of_points #'NUMBER OF POINTS'
+# #Запись данных в таблицу
+#     sheet_FINAL.cell(row=last_row+1, column=1).value = i+1 #'№'
+#     sheet_FINAL.cell(row=last_row+1, column=4).value = number_of_points #'NUMBER OF POINTS'
 
-    interval =(keys[-1]-keys[0])/number_of_points
-    sheet_FINAL.cell(row=last_row+1, column=5).value = interval #'INTERVAL ALL'
+#     interval =(keys[-1]-keys[0])/number_of_points
+#     sheet_FINAL.cell(row=last_row+1, column=5).value = interval #'INTERVAL ALL'
 
 
-    for j, ke in enumerate(keys):
-        sheet_FINAL.cell(row=last_row+j+1, column=2).value = ke #'RPM ALL'
-        sheet_FINAL.cell(row=last_row+j+1, column=3).value = for_final_polynom_mass_list[j][i] #'Mass_flow [kg/s]'
+#     for j, ke in enumerate(keys):
+#         sheet_FINAL.cell(row=last_row+j+1, column=2).value = ke #'RPM ALL'
+#         sheet_FINAL.cell(row=last_row+j+1, column=3).value = for_final_polynom_mass_list[j][i] #'Mass_flow [kg/s]'
         
-        sheet_FINAL.cell(row=last_row+j+1, column=14).value = for_final_polynom_mass_list[j][i] #'Mass_flow [kg/s]'
-        sheet_FINAL.cell(row=last_row+j+1, column=15).value = for_final_polynom_variable_name_list[j][i] #f'Polynom {variable_name_Y}'
-        pol_for_end.append(for_final_polynom_variable_name_list[j][i])
-        mass_for_end.append(for_final_polynom_mass_list[j][i])
+#         sheet_FINAL.cell(row=last_row+j+1, column=14).value = for_final_polynom_mass_list[j][i] #'Mass_flow [kg/s]'
+#         sheet_FINAL.cell(row=last_row+j+1, column=15).value = for_final_polynom_variable_name_list[j][i] #f'Polynom {variable_name_Y}'
+#         pol_for_end.append(for_final_polynom_variable_name_list[j][i])
+#         mass_for_end.append(for_final_polynom_mass_list[j][i])
     
-    key_value=keys[0]
-    for j in range(number_of_points+1):
-        sheet_FINAL.cell(row=last_row+j+1, column=6).value = key_value #''RPM+INTERVAL' первый элемент
-        key_interval_list.append(key_value)
-        key_value+=interval
+#     key_value=keys[0]
+#     for j in range(number_of_points+1):
+#         sheet_FINAL.cell(row=last_row+j+1, column=6).value = key_value #''RPM+INTERVAL' первый элемент
+#         key_interval_list.append(key_value)
+#         key_value+=interval
 
-#Первые значения Назождение X min X max Y min Y max Y function############################################
-    for j, valu in enumerate(key_interval_list):
-        lst = keys
-        x = valu
-        left, right = find_nearest_points(lst, x)
-        left_index = lst.index(left)
-        right_index = lst.index(right)
-        x_min = keys[left_index]
-        x_max = keys[right_index]
-        y_min = for_final_polynom_mass_list[left_index][i]
-        y_max = for_final_polynom_mass_list[right_index][i]
+# #Первые значения Назождение X min X max Y min Y max Y function############################################
+#     for j, valu in enumerate(key_interval_list):
+#         lst = keys
+#         x = valu
+#         left, right = find_nearest_points(lst, x)
+#         left_index = lst.index(left)
+#         right_index = lst.index(right)
+#         x_min = keys[left_index]
+#         x_max = keys[right_index]
+#         y_min = for_final_polynom_mass_list[left_index][i]
+#         y_max = for_final_polynom_mass_list[right_index][i]
 
-        y_FUNCTION = y_min+(y_max-y_min)/(x_max-x_min)*(x - x_min)
-        x_min_list.append(x_min)
-        x_max_list.append(x_max)
-        y_min_list.append(y_min)
-        y_max_list.append(y_max)
-        y_function_list.append(y_FUNCTION)
+#         y_FUNCTION = y_min+(y_max-y_min)/(x_max-x_min)*(x - x_min)
+#         x_min_list.append(x_min)
+#         x_max_list.append(x_max)
+#         y_min_list.append(y_min)
+#         y_max_list.append(y_max)
+#         y_function_list.append(y_FUNCTION)
 
 
-#2 значения Назождение X min X max Y min Y max Y function############################################
-    for j, valu in enumerate(y_function_list):
-        lst = mass_for_end
-        x = valu
-        left, right = find_nearest_points(lst, x)
-        left_index = lst.index(left)
-        right_index = lst.index(right)
-        x_min = mass_for_end[left_index]
-        x_max = mass_for_end[right_index]
-        y_min = pol_for_end[left_index]
-        y_max = pol_for_end[right_index]
+# #2 значения Назождение X min X max Y min Y max Y function############################################
+#     for j, valu in enumerate(y_function_list):
+#         lst = mass_for_end
+#         x = valu
+#         left, right = find_nearest_points(lst, x)
+#         left_index = lst.index(left)
+#         right_index = lst.index(right)
+#         x_min = mass_for_end[left_index]
+#         x_max = mass_for_end[right_index]
+#         y_min = pol_for_end[left_index]
+#         y_max = pol_for_end[right_index]
 
-        y_FUNCTION = y_min+(y_max-y_min)/(x_max-x_min)*(x - x_min)
-        x_min_SEC_list.append(x_min)
-        x_max_SEC_list.append(x_max)
-        y_min_SEC_list.append(y_min)
-        y_max_SEC_list.append(y_max)
-        y_function_SEC_list.append(y_FUNCTION)
+#         y_FUNCTION = y_min+(y_max-y_min)/(x_max-x_min)*(x - x_min)
+#         x_min_SEC_list.append(x_min)
+#         x_max_SEC_list.append(x_max)
+#         y_min_SEC_list.append(y_min)
+#         y_max_SEC_list.append(y_max)
+#         y_function_SEC_list.append(y_FUNCTION)
         
     
 
-    for j, value in enumerate(x_min_list):
-        sheet_FINAL.cell(row=last_row+j+1, column=7).value = x_min_list[j]  # Xmin
-        sheet_FINAL.cell(row=last_row+j+1, column=8).value = x_max_list[j]# Xmax
-        sheet_FINAL.cell(row=last_row+j+1, column=9).value = y_min_list[j]# Ymin
-        sheet_FINAL.cell(row=last_row+j+1, column=10).value = y_max_list[j]# Y max
-        sheet_FINAL.cell(row=last_row+j+1,
-                          column=11).value = y_function_list[j] # Y function
-        sheet_FINAL.cell(row=last_row+j+1,
-                          column=23).value = y_function_list[j] #X result
+#     for j, value in enumerate(x_min_list):
+#         sheet_FINAL.cell(row=last_row+j+1, column=7).value = x_min_list[j]  # Xmin
+#         sheet_FINAL.cell(row=last_row+j+1, column=8).value = x_max_list[j]# Xmax
+#         sheet_FINAL.cell(row=last_row+j+1, column=9).value = y_min_list[j]# Ymin
+#         sheet_FINAL.cell(row=last_row+j+1, column=10).value = y_max_list[j]# Y max
+#         sheet_FINAL.cell(row=last_row+j+1,
+#                           column=11).value = y_function_list[j] # Y function
+#         sheet_FINAL.cell(row=last_row+j+1,
+#                           column=23).value = y_function_list[j] #X result
         
-        sheet_FINAL.cell(row=last_row+j+1, column=16).value = x_min_SEC_list[j]  # Xmin
-        sheet_FINAL.cell(row=last_row+j+1, column=17).value = x_max_SEC_list[j]# Xmax
-        sheet_FINAL.cell(row=last_row+j+1, column=18).value = y_min_SEC_list[j]# Ymin
-        sheet_FINAL.cell(row=last_row+j+1, column=19).value = y_max_SEC_list[j]# Y max
-        sheet_FINAL.cell(row=last_row+j+1,
-                          column=20).value = y_function_SEC_list[j] # Y function
-        sheet_FINAL.cell(row=last_row+j+1,
-                          column=24).value = y_function_SEC_list[j] #Y result
+#         sheet_FINAL.cell(row=last_row+j+1, column=16).value = x_min_SEC_list[j]  # Xmin
+#         sheet_FINAL.cell(row=last_row+j+1, column=17).value = x_max_SEC_list[j]# Xmax
+#         sheet_FINAL.cell(row=last_row+j+1, column=18).value = y_min_SEC_list[j]# Ymin
+#         sheet_FINAL.cell(row=last_row+j+1, column=19).value = y_max_SEC_list[j]# Y max
+#         sheet_FINAL.cell(row=last_row+j+1,
+#                           column=20).value = y_function_SEC_list[j] # Y function
+#         sheet_FINAL.cell(row=last_row+j+1,
+#                           column=24).value = y_function_SEC_list[j] #Y result
 
 
-    # Определение области значений для оси X и оси Y
-    x_data1 = Reference(sheet_FINAL, min_col=23,
-                        min_row=last_row+1, max_row=last_row+number_of_points+1)
-    y_data1 = Reference(sheet_FINAL, min_col=24,
-                        min_row=last_row+1, max_row=last_row+number_of_points+1)
+#     # Определение области значений для оси X и оси Y
+#     x_data1 = Reference(sheet_FINAL, min_col=23,
+#                         min_row=last_row+1, max_row=last_row+number_of_points+1)
+#     y_data1 = Reference(sheet_FINAL, min_col=24,
+#                         min_row=last_row+1, max_row=last_row+number_of_points+1)
 
-    # Добавление данных на график
-    series1 = Series(y_data1, x_data1, title=i)
-    chart4.append(series1)
+#     # Добавление данных на график
+#     series1 = Series(y_data1, x_data1, title=i)
+#     chart4.append(series1)
 
-    last_row = sheet_FINAL.max_row + 3
-
-
-    x_min_list.clear()
-    y_min_list.clear()
-    x_max_list.clear()
-    y_max_list.clear()
-    y_function_list.clear()
-    key_interval_list.clear()
-    pol_for_end.clear()
-    mass_for_end.clear()
-
-# Добавление графика на лист
-sheet_FINAL.add_chart(chart4, "T2")
-chart4.title = f"ALL RESULTS"
-chart4.x_axis.title = "Mass_flow [kg/s]"
-chart4.y_axis.title = f"{variable_name_Y}"
-
-workbook.save(output_file)
+#     last_row = sheet_FINAL.max_row + 3
 
 
-###############################################################################
-################################        Создание файла с информацией из .SAE ##
+#     x_min_list.clear()
+#     y_min_list.clear()
+#     x_max_list.clear()
+#     y_max_list.clear()
+#     y_function_list.clear()
+#     key_interval_list.clear()
+#     pol_for_end.clear()
+#     mass_for_end.clear()
 
-#   Создадим словарь с нудными данными 
-dictionary_ALL={}
+# # Добавление графика на лист
+# sheet_FINAL.add_chart(chart4, "T2")
+# chart4.title = f"ALL RESULTS"
+# chart4.x_axis.title = "Mass_flow [kg/s]"
+# chart4.y_axis.title = f"{variable_name_Y}"
 
-col_name_RPM = 'RPM'
-col_name_Mass_flow = 'Mass_flow [kg/s]'
-col_name_PI = 'PI'
-col_name_Eff1 = 'Eff1'
-col_data_Mass_flow = []
-col_data_RPM = []
-col_data_Eff1 = []
-col_data_PI = []
+# workbook.save(output_file)
 
-write_coll(col_name_RPM, col_data_RPM)
-write_coll(col_name_Mass_flow, col_data_Mass_flow)
-write_coll(col_name_PI, col_data_PI)
-write_coll(col_name_Eff1, col_data_Eff1)
 
-for i, row in enumerate(col_data_RPM):
-    key = row
-    value = (col_data_Mass_flow[i], col_data_PI[i], col_data_Eff1[i])
-    # If the key does not exist, create a new list and add the key-value pair to the dictionary
-    dictionary_ALL[key] = [value]
+# ###############################################################################
+# ################################        Создание файла с информацией из .SAE ##
 
-# Указываем путь к файлу
-print(dictionary_ALL)
+# #   Создадим словарь с нудными данными 
+# dictionary_ALL={}
 
-output_file_SAE = f"{path}\{name_xlsx}.sae"
+# col_name_RPM = 'RPM'
+# col_name_Mass_flow = 'Mass_flow [kg/s]'
+# col_name_PI = 'PI'
+# col_name_Eff1 = 'Eff1'
+# col_data_Mass_flow = []
+# col_data_RPM = []
+# col_data_Eff1 = []
+# col_data_PI = []
 
-# Открываем файл в режиме записи
-file = open(output_file_SAE, "w")
+# write_coll(col_name_RPM, col_data_RPM)
+# write_coll(col_name_Mass_flow, col_data_Mass_flow)
+# write_coll(col_name_PI, col_data_PI)
+# write_coll(col_name_Eff1, col_data_Eff1)
 
-# Записываем заголовок
-file.write("# Table format: XY\n")
-file.write("# Performance map			\n")
-file.write("# Nc 	 dmc 	 PR 	 eff\n")
-file.write("# [rpm] 	 [kg/s] 	 [total/total] 	 [null]\n")
+# for i, row in enumerate(col_data_RPM):
+#     key = row
+#     value = (col_data_Mass_flow[i], col_data_PI[i], col_data_Eff1[i])
+#     # If the key does not exist, create a new list and add the key-value pair to the dictionary
+#     dictionary_ALL[key] = [value]
 
-# Генерируем и записываем данные в файл
+# # Указываем путь к файлу
+# print(dictionary_ALL)
 
-for i in range(len(col_data_RPM)):
-    file.write("{:.1f}   {:.4f}   {:.16f}   {:.9f}   \n".format(col_data_RPM[i], col_data_Mass_flow[i], col_data_PI[i], col_data_Eff1[i]))
+# output_file_SAE = f"{path}\{name_xlsx}.sae"
 
-# Закрываем файл
-file.close()
+# # Открываем файл в режиме записи
+# file = open(output_file_SAE, "w")
+
+# # Записываем заголовок
+# file.write("# Table format: XY\n")
+# file.write("# Performance map			\n")
+# file.write("# Nc 	 dmc 	 PR 	 eff\n")
+# file.write("# [rpm] 	 [kg/s] 	 [total/total] 	 [null]\n")
+
+# # Генерируем и записываем данные в файл
+
+# for i in range(len(col_data_RPM)):
+#     file.write("{:.1f}   {:.4f}   {:.16f}   {:.9f}   \n".format(col_data_RPM[i], col_data_Mass_flow[i], col_data_PI[i], col_data_Eff1[i]))
+
+# # Закрываем файл
+# file.close()
