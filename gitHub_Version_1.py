@@ -5,6 +5,7 @@ import openpyxl as op
 from openpyxl.chart import LineChart, Reference, Series
 from openpyxl import chart
 from scipy.interpolate import CubicSpline
+from scipy.interpolate import CubicHermiteSpline
 
 # Указываем папку в которой производить поиск
 path = input(
@@ -1147,8 +1148,7 @@ for i in range(len(for_final_polynom_mass_list[0])):
         y_min_SEC_list.append(y_min)
         y_max_SEC_list.append(y_max)
         y_function_SEC_list.append(y_FUNCTION)
-        
-    
+
 
     for j, value in enumerate(x_min_list):
         sheet_FINAL.cell(row=last_row+j+1, column=7).value = x_min_list[j]  # Xmin
@@ -1178,6 +1178,7 @@ for i in range(len(for_final_polynom_mass_list[0])):
 
     # Добавление данных на график
     series1 = Series(y_data1, x_data1, title=i)
+    series1.marker.symbol = "circle"
     chart4.append(series1)
 
     last_row = sheet_FINAL.max_row + 3
@@ -1188,6 +1189,13 @@ for i in range(len(for_final_polynom_mass_list[0])):
     x_max_list.clear()
     y_max_list.clear()
     y_function_list.clear()
+
+    x_min_SEC_list.clear()
+    x_max_SEC_list.clear()
+    y_min_SEC_list.clear()
+    y_max_SEC_list.clear()
+    y_function_SEC_list.clear()
+
     key_interval_list.clear()
     pol_for_end.clear()
     mass_for_end.clear()
