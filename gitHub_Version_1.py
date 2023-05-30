@@ -6,6 +6,8 @@ from openpyxl.chart import LineChart, Reference, Series
 from openpyxl import chart
 from scipy.interpolate import CubicSpline
 from scipy.interpolate import CubicHermiteSpline
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import PolynomialFeatures
 
 # Указываем папку в которой производить поиск
 path = input(
@@ -956,27 +958,58 @@ for i, (key, values) in enumerate(dictionary.items()):
 
     # Индексы пропущенных значений
     missing_indices = np.where(y_train == None)[0]
+    missing_indices_NOTNONE = np.where(y_train != None)[0]
 
-    # Заполнение первого пропущенного значения с использованием линейной интерполяции
-    if 0 in missing_indices:
-        next_index = missing_indices[np.where(missing_indices > 0)[0][0]]
-        y_train[0] = y_train[next_index]
+
+    # Индексы пропущенных значений
+    missing_indices_Liner = []
+    missing_indices_Cub = []
+    is_first_none = True
+
+    for i in range(len(y_train)):
+        if y_train[i] is None:
+            if is_first_none:
+                missing_indices_Liner.append(i)
+            else:
+                missing_indices_Cub.append(i)
+        else:
+            is_first_none = False
 
     # Удаление пропущенных значений из массивов
-    X_train_filled = np.delete(X_train, missing_indices)
-    y_train_filled = np.delete(y_train, missing_indices)
+    X_train_filled_All = np.delete(X_train, missing_indices)
+    y_train_filled_All = np.delete(y_train, missing_indices)
 
-    # Сортировка значений X_train_filled
-    sort_indices = np.argsort(X_train_filled)
-    X_train_filled = X_train_filled[sort_indices]
-    y_train_filled = y_train_filled[sort_indices]
+    X_train_filled_Cub = np.delete(X_train, missing_indices_Liner)
+    y_train_filled_Cub = np.delete(y_train, missing_indices_Liner)
+
+    # Сортировка значений X_train_filled для известных згачениц
+    sort_indices_All = np.argsort(X_train_filled_All)
+    X_train_filled_All = X_train_filled_All[sort_indices_All]
+    y_train_filled_All = y_train_filled_All[sort_indices_All]
+
 
     # Создание интерполяционного объекта
-    interpolation = CubicSpline(X_train_filled, y_train_filled)
-
+    interpolation = CubicSpline(X_train_filled_All, y_train_filled_All)
     # Заполнение пропущенных значений
-    y_train_interpolated = interpolation(X_train)
+    y_train_interpolated_Cub = interpolation(X_train_filled_Cub)
 
+#   Экстраполяция при помощи линеарищации
+    poly_features = PolynomialFeatures(degree=3)
+    X_train_poly = poly_features.fit_transform(X_train_filled_All.reshape(-1, 1))
+
+
+    model = LinearRegression(fit_intercept=True)
+    # X_train_reshaped = X_train_filled_All.reshape(-1, 1)
+    # X_train_reshaped = np.stack((X_train_reshaped, X_train_reshaped ** 3),axis=1)[:, :, 0]
+
+    model.fit(X_train_poly, y_train_filled_All)
+
+    x_test_poly = poly_features.transform(X_train[missing_indices_Liner].reshape(-1, 1))
+    y_train_interpolated_Liner = model.predict(x_test_poly)
+
+    y_train_interpolated = np.concatenate((y_train_interpolated_Liner, y_train_interpolated_Cub))
+
+    print(y_train_interpolated)
     for_final_polynom_variable_name_list.append(y_train_interpolated.copy())
 
     for j, values in enumerate(y_train_interpolated):
