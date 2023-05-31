@@ -2,6 +2,7 @@
 import os
 import numpy as np
 import openpyxl as op
+import math
 from openpyxl.chart import LineChart, Reference, Series
 from openpyxl import chart
 from scipy.interpolate import CubicSpline
@@ -469,6 +470,7 @@ standart_chart_Y_list=list()
 
 
 
+
 #####################     ЗНАЧЕНИЯ ДЛЯ ОБРАЗЦОВОЙ ЛИНИИ    №№№№№№№№№№№№№№№№№
 # Нахождение коэффициентов a,b,c уравнения y=ax^3+bx^2+cx+d для нахожлдения точек предскаывает значение переменной variable_name_Y в цикле (2.0) ниже
 # Input values
@@ -515,6 +517,7 @@ def find_value_last_element_X(values, z):
             y_left = y_mid
     return x_left
 
+print(dictionary_Eff1_Mass)
 
 for i, (key, values) in enumerate(dictionary_Eff1_Mass.items()):
     if i==angle_curve_list.index(min(angle_curve_list)):
@@ -532,7 +535,7 @@ for i, (key, values) in enumerate(dictionary_Eff1_Mass.items()):
         step = (find_value_last_element_X(values, z) - values[-1][0]) / 95
 
         for k in range(95):
-            value_last_element_X += step
+            value_last_element_X =value_last_element_X+ step
             value_last_element_Y = z[0] * \
                 (value_last_element_X*value_last_element_X*value_last_element_X) + \
                 z[1]*(value_last_element_X*value_last_element_X) + \
@@ -541,6 +544,15 @@ for i, (key, values) in enumerate(dictionary_Eff1_Mass.items()):
             standart_chart_X_list.append(value_last_element_X)
             standart_chart_Y_list.append(value_last_element_Y)
     count+=4
+
+
+#   условие для обозначения значения которое будем искать для записания 
+if min(col_data_Eff1)<=0.4:
+    search_value=math.floor(min(col_data_Eff1) * 10) / 10
+else:
+    search_value=0.4
+
+
 
 # Цикл который заносит и считает значения в личте 3
 for i, (key, values) in enumerate(dictionary_Eff1_Mass.items()):
@@ -558,8 +570,10 @@ for i, (key, values) in enumerate(dictionary_Eff1_Mass.items()):
             sheet_MIN.cell(row=k+6, column=last_call +
                        2).value = standart_chart_Y_list[k]
         
-        list_last_element_X=standart_chart_X_list
-        list_last_element_Y=standart_chart_Y_list
+        list_last_element_X.extend(standart_chart_X_list)
+        list_last_element_Y.extend(standart_chart_Y_list)
+        print('list_last_element_X',list_last_element_X)
+        print('list_last_element_Y',list_last_element_Y)
 
 
         list_last_element_X_MIN.append(standart_chart_X_list[standart_chart_Y_list.index(min(standart_chart_Y_list))])
@@ -588,6 +602,7 @@ for i, (key, values) in enumerate(dictionary_Eff1_Mass.items()):
         # Координаты точки, с которой график должен начинаться
         start_point = (values[-1][0], values[-1][1])
 
+        
         # Вычисляем смещение по осям X и Y
         offset_x = start_point[0] - points_X[0]
         offset_y = start_point[1] - points_Y[0]
@@ -617,12 +632,14 @@ for i, (key, values) in enumerate(dictionary_Eff1_Mass.items()):
     # Отсортируем массив по первому столбцу
     data = data[data[:, 0].argsort()]
     # Искомое значение
-    search_value = 0.4
 
     left_index = np.searchsorted(data[:, 0], search_value, side='right')
     right_index = left_index + 1
+
     left_diff = abs(search_value - data[left_index, 0])
     right_diff = abs(search_value - data[right_index, 0])
+    # left_diff = abs(search_value - data[left_index, 0])
+    # right_diff = abs(search_value - data[right_index, 0])
 
     if left_diff <= right_diff:
         result_Y_MAX = data[left_index, 1]
@@ -663,8 +680,8 @@ for i, (key, values) in enumerate(dictionary_Eff1_Mass.items()):
     list_last_element_X.clear()
     list_last_element_Y.clear()
 
-    last_call += 4
 
+    last_call += 4
 
 workbook.save(output_file)
 # Создаем таблицу точек для постраения графика помпажа
@@ -987,29 +1004,49 @@ for i, (key, values) in enumerate(dictionary.items()):
     X_train_filled_All = X_train_filled_All[sort_indices_All]
     y_train_filled_All = y_train_filled_All[sort_indices_All]
 
+    if missing_indices_Cub==0:
+        def polynomial_extrapolation(x, y, x_new, degree):
+            coefficients = np.polyfit(x, y, degree)
+            y_new = np.polyval(coefficients, x_new)
+            return y_new
 
-    # Создание интерполяционного объекта
-    interpolation = CubicSpline(X_train_filled_All, y_train_filled_All)
-    # Заполнение пропущенных значений
-    y_train_interpolated_Cub = interpolation(X_train_filled_Cub)
+        x = X_train_filled_All
+        y = y_train_filled_All
 
-#   Экстраполяция при помощи линеарищации
-    poly_features = PolynomialFeatures(degree=3)
-    X_train_poly = poly_features.fit_transform(X_train_filled_All.reshape(-1, 1))
+        x_new = np.array(X_train[missing_indices_Liner])
 
+        degree = 3  # Степень полинома
 
-    model = LinearRegression(fit_intercept=True)
-    # X_train_reshaped = X_train_filled_All.reshape(-1, 1)
-    # X_train_reshaped = np.stack((X_train_reshaped, X_train_reshaped ** 3),axis=1)[:, :, 0]
+        y_new = polynomial_extrapolation(x, y, x_new, degree)
+        y_train_interpolated = np.concatenate((y_new, y_train_filled_All))
+    else:
+        def extrapolate_curve(x, y, x_new):
+            # Создание объекта CubicSpline
+            x=np.flip(x)
+            y=np.flip(y)
 
-    model.fit(X_train_poly, y_train_filled_All)
+            cs = CubicSpline(x, y)
+            # Экстраполяция кривой
+            y_new = cs(x_new)
+            return y_new
 
-    x_test_poly = poly_features.transform(X_train[missing_indices_Liner].reshape(-1, 1))
-    y_train_interpolated_Liner = model.predict(x_test_poly)
+        # Пример данных для экстраполяции
+        x = X_train_filled_All  # Исходные значения x
+        y = y_train_filled_All # Исходные значения y
 
-    y_train_interpolated = np.concatenate((y_train_interpolated_Liner, y_train_interpolated_Cub))
+        x = np.flip(x)
+        y = np.flip(y)
 
-    print(y_train_interpolated)
+        x_new = np.array(X_train[missing_indices_Liner])  # Новые значения x для экстраполяции
+
+        y_new = extrapolate_curve(x, y, x_new)
+            # Создание интерполяционного объекта
+        interpolation = CubicSpline(X_train_filled_All, y_train_filled_All)
+
+        # Заполнение пропущенных значений
+        y_train_cub = interpolation(X_train_filled_Cub)
+        y_train_interpolated = np.concatenate((y_new, y_train_cub))
+
     for_final_polynom_variable_name_list.append(y_train_interpolated.copy())
 
     for j, values in enumerate(y_train_interpolated):
@@ -1269,7 +1306,6 @@ for i, row in enumerate(col_data_RPM):
     dictionary_ALL[key] = [value]
 
 # Указываем путь к файлу
-print(dictionary_ALL)
 
 output_file_SAE = f"{path}\{name_xlsx}.sae"
 
