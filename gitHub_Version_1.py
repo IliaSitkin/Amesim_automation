@@ -293,6 +293,7 @@ for i, (key, values) in enumerate(dictionary.items()):
 
     # Solve the system of equations
     a, b, c = np.linalg.lstsq(A, B, rcond=None)[0]
+    
 #################################################################################################################################
 
 # 2.0 Цикл который считает шаг Mass_flow и предскаывает значение переменной variable_name_Y
